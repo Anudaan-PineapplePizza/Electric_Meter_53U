@@ -1,0 +1,70 @@
+﻿{
+  "sample_ms": 500,
+  "x_window_s": 120,
+  "y1_group": 0,
+  "y2_group": 9,
+  "chart": [
+    "U1N",
+    "U",
+    "THDu12",
+    "THDu31",
+    "THDu23",
+    "THDu1N"
+  ],
+  "panel": [
+    "U",
+    "I",
+    "P",
+    "Q",
+    "S",
+    "PF",
+    "F",
+    "THDi1",
+    "Phase_Dir",
+    "I_Neutral",
+    "I1",
+    "THDiN",
+    "THDu1N",
+    "PF1",
+    "S1",
+    "Q1",
+    "P1"
+  ],
+  "csv": [
+    "U",
+    "I",
+    "P",
+    "Q",
+    "S",
+    "PF",
+    "F",
+    "THDi1",
+    "THDiN",
+    "UT12",
+    "UT23",
+    "UT31",
+    "Phase_Dir",
+    "THDu1N",
+    "S1",
+    "Q1",
+    "I1",
+    "P1",
+    "I_Neutral",
+    "PF1"
+  ],
+  "axis_min": {
+    "UT12": -1.5,
+    "UT23": -1.5,
+    "UT31": -1.5,
+    "I": -1,
+    "I1": -1,
+    "I2": -1,
+    "I3": -1,
+    "I_Neutral": -1
+  },
+  "axis_max": {
+    "UT12": 1.5,
+    "UT23": 1.5,
+    "UT31": 1.5
+  }
+}
