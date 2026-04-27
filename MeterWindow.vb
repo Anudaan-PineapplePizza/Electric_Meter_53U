@@ -179,7 +179,9 @@ Public Class MeterWindow
         SyncY1Y2CombosFromPrefs()
 
         ' 9. Start sampling if connected (jamais en mode demo)
-        If IsConnected() AndAlso Not IsDemoMode Then Timer_Sample.Start()
+        If (IsConnected() OrElse ModbusTcpMaster.modbustcpisconnected) AndAlso Not IsDemoMode Then
+            Timer_Sample.Start()
+        End If
         UpdateSamplingButton()
         UpdateChartPauseButton()
         UpdateRecordButton()

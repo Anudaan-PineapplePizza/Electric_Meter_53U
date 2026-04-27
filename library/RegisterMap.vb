@@ -71,6 +71,7 @@ Public Enum SignalID As Integer
     UT12 = 43
     UT23 = 44
     UT31 = 45
+
     ' ── ePack TCP ────────────────────────────────────────────────────────────
     ePack_Vline = 46      '256 Tension de ligne
     ePack_Irms = 47       '257 Courant efficace de la charge
@@ -86,7 +87,20 @@ Public Enum SignalID As Integer
     ePack_Frequency = 57  '267 Fréquence
     ePack_Vsqburst = 58   '268 Valeur moyenne du carré de la tension de charge en train d'onde
     ePack_Ramping = 59    '1440 (0 = Ramping // 1 = Finished)
-
+    ' ── ePack Config ─────────
+    ePack_VNominal = 60
+    ePack_INominal = 61
+    ePack_Firing = 62
+    ePack_Control = 63
+    ePack_ILimit = 64
+    ePack_I2Transfer = 65
+    ePack_Xfmr = 66
+    ePack_Heater = 67
+    ePack_AiFct = 68
+    ePack_AiType = 69
+    ePack_Di1Fct = 70
+    ePack_Di2Fct = 71
+    '──────────────────────────────────────────────────────────────────────────
 End Enum
 
 ' ──── ENUM Identifier le type de signal pour le mettre dans un Group ─────────
@@ -242,16 +256,31 @@ Public Module RegisterMap
             r.Add(New RegisterDef(SignalID.ePack_Irms, "ePack I rms", "A", 100.0, 0, 100, Color.FromArgb(0, 200, 140), SignalGroup.ePack, 257, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Isqburst, "ePack Iburst", "A", 100.0, 0, 5000, Color.FromArgb(0, 170, 110), SignalGroup.ePack, 258, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Isq, "ePack I", "A", 100.0, 0, 5000, Color.FromArgb(0, 140, 90), SignalGroup.ePack, 259, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Vrms, "ePack Vrms", "V", 10.0, 0, 500, Color.FromArgb(80, 180, 255), SignalGroup.ePack, 260, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Vsq, "ePack V", "V", 10.0, 0, 90000, Color.FromArgb(60, 150, 235), SignalGroup.ePack, 261, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Pburst, "ePack P burst", "W", 10.0, 0, 50000, Color.FromArgb(255, 210, 80), SignalGroup.ePack, 262, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_P, "ePack P", "W", 10.0, 0, 50000, Color.FromArgb(255, 185, 50), SignalGroup.ePack, 263, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_S, "ePack S", "VA", 10.0, 0, 50000, Color.FromArgb(200, 130, 255), SignalGroup.ePack, 264, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_PF, "ePack PF", "PF", 10.0, -1, 1, Color.FromArgb(255, 110, 110), SignalGroup.ePack, 265, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Z, "ePack Z", "Ohm", 10.0, 0, 1000, Color.FromArgb(180, 180, 100), SignalGroup.ePack, 266, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Vrms, "ePack Vrms", "V", 100.0, 0, 500, Color.FromArgb(80, 180, 255), SignalGroup.ePack, 260, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Vsq, "ePack V", "V", 100.0, 0, 90000, Color.FromArgb(60, 150, 235), SignalGroup.ePack, 261, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Pburst, "ePack P burst", "W", 100.0, 0, 50000, Color.FromArgb(255, 210, 80), SignalGroup.ePack, 262, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_P, "ePack P", "W", 100.0, 0, 50000, Color.FromArgb(255, 185, 50), SignalGroup.ePack, 263, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_S, "ePack S", "VA", 100.0, 0, 50000, Color.FromArgb(200, 130, 255), SignalGroup.ePack, 264, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_PF, "ePack PF", "PF", 100.0, -1, 1, Color.FromArgb(255, 110, 110), SignalGroup.ePack, 265, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Z, "ePack Z", "Ohm", 100.0, 0, 1000, Color.FromArgb(180, 180, 100), SignalGroup.ePack, 266, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Frequency, "ePack Frequency", "Hz", 10.0, 45, 65, Color.FromArgb(140, 200, 255), SignalGroup.ePack, 267, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Vsqburst, "ePack V burst", "V", 10.0, 0, 90000, Color.FromArgb(40, 120, 215), SignalGroup.ePack, 268, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Ramping, "ePack Ramping", "PF", 10.0, 0, 90000, Color.FromArgb(255, 150, 150), SignalGroup.ePack, 1440, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Ramping, "ePack Ramping", "", 1.0, -1.5, 1.5, Color.FromArgb(255, 150, 150), SignalGroup.ePack, 1440, 2, True, False))
+
+            ' Parametres de configuration ePack (lecture seule, pas de graphique)
+            r.Add(New RegisterDef(SignalID.ePack_VNominal, "ePack V Nominal", "V", 1.0, 0, 500, Color.FromArgb(100, 220, 180), SignalGroup.ePack, 3412, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_INominal, "ePack I Nominal", "A", 1.0, 0, 1000, Color.FromArgb(0, 200, 140), SignalGroup.ePack, 3411, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Firing, "ePack Firing", "", 1.0, 0, 5, Color.FromArgb(255, 185, 50), SignalGroup.ePack, 3402, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Control, "ePack Control", "", 1.0, 0, 5, Color.FromArgb(255, 100, 50), SignalGroup.ePack, 3405, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_ILimit, "ePack I Limit", "", 1.0, 0, 5, Color.FromArgb(255, 110, 110), SignalGroup.ePack, 3403, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_I2Transfer, "ePack I2 Transf.", "", 1.0, 0, 5, Color.FromArgb(200, 130, 255), SignalGroup.ePack, 3404, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Xfmr, "ePack Xfmr", "", 1.0, 0, 5, Color.FromArgb(180, 180, 100), SignalGroup.ePack, 3410, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Heater, "ePack Heater", "", 1.0, 0, 5, Color.FromArgb(255, 150, 80), SignalGroup.ePack, 3406, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_AiFct, "ePack AI Fct", "", 1.0, 0, 5, Color.FromArgb(140, 200, 255), SignalGroup.ePack, 3407, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_AiType, "ePack AI Type", "", 1.0, 0, 5, Color.FromArgb(120, 180, 235), SignalGroup.ePack, 3408, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Di1Fct, "ePack DI1 Fct", "", 1.0, 0, 5, Color.FromArgb(100, 160, 215), SignalGroup.ePack, 3418, 2, False, False))
+            r.Add(New RegisterDef(SignalID.ePack_Di2Fct, "ePack DI2 Fct", "", 1.0, 0, 5, Color.FromArgb(80, 140, 195), SignalGroup.ePack, 3409, 2, False, False))
+
         End If
 
         Return r.ToArray()

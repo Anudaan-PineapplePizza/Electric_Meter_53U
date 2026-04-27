@@ -19,18 +19,18 @@
 
         Public Ramping As Integer   '1440 Ramping = '0' // else '1'
 
-        'Public V_Nominal As Single
-        'Public I_Nominal As Single
-        'Public Firing As Single
-        'Public Control As Single
-        'Public I_Limit As Single
-        'Public I2_Transfer As Single
-        'Public Xfmr As Single
-        'Public Heater As Single
-        'Public AI_Fct As Single
-        'Public AI_Type As Single
-        'Public DI1_Fct As Single
-        'Public DI2_Fct As Single
+        Public V_Nominal As Single   '3412
+        Public I_Nominal As Single   '3411
+        Public Firing As Single      '3402
+        Public Control As Single     '3405
+        Public I_Limit As Single     '3403
+        Public I2_Transfer As Single '3404
+        Public Xfmr As Single        '3410
+        Public Heater As Single      '3406
+        Public AI_Fct As Single      '3407
+        Public AI_Type As Single     '3408
+        Public DI1_Fct As Single     '3418
+        Public DI2_Fct As Single     '3409
 
 
     End Structure
@@ -67,13 +67,13 @@
         d(SignalID.ePack_Irms) = TCP_Var.irms
         d(SignalID.ePack_Isqburst) = TCP_Var.isqburst
         d(SignalID.ePack_Isq) = TCP_Var.isq
-        d(SignalID.ePack_Vrms) = TCP_Var.vrms / 10
-        d(SignalID.ePack_Vsq) = TCP_Var.vsq / 10
-        d(SignalID.ePack_Pburst) = TCP_Var.pburst / 10
-        d(SignalID.ePack_P) = TCP_Var.P / 10
-        d(SignalID.ePack_S) = TCP_Var.S / 10
-        d(SignalID.ePack_PF) = TCP_Var.PF / 10
-        d(SignalID.ePack_Z) = TCP_Var.z / 10
+        d(SignalID.ePack_Vrms) = TCP_Var.vrms
+        d(SignalID.ePack_Vsq) = TCP_Var.vsq
+        d(SignalID.ePack_Pburst) = TCP_Var.pburst
+        d(SignalID.ePack_P) = TCP_Var.P
+        d(SignalID.ePack_S) = TCP_Var.S
+        d(SignalID.ePack_PF) = TCP_Var.PF
+        d(SignalID.ePack_Z) = TCP_Var.z
         d(SignalID.ePack_Frequency) = TCP_Var.frequency
         d(SignalID.ePack_Vsqburst) = TCP_Var.vsqburst
 
@@ -89,7 +89,7 @@
     Public Sub Read_epackTCP(TextBox As Boolean)
         Dim byteresult(61) As Byte
         Dim val As Integer = 256
-        Dim mybytelength As Integer = 61
+        Dim mybytelength As Integer = 60
 
         If modbustcp.Read_NChar(1, val, byteresult, mybytelength) Then
 
@@ -120,6 +120,57 @@
                 For i As Integer = 0 To 12
                     result &= (val + i).ToString & "=" & reg(i).ToString & vbCrLf
                 Next
+                MsgBox(result)
+            End If
+
+        Else
+            modbustcpisconnected = False
+        End If
+    End Sub
+
+    Public Sub Read_Config_epackTCP(TextBox As Boolean)
+        ' Lecture en bloc de 3400 a 3412 (13 registres = 26 bytes)
+        Dim byteresult(50) As Byte              ' Test d'index x2 (25*2) 
+        Dim startAddr As Integer = 3400
+        Dim regCount As Integer = 13
+        Dim mybytelength As Integer = regCount * 2 + 1  ' Test d'index  +1 
+
+        If modbustcp.Read_NChar(1, startAddr, byteresult, mybytelength) Then
+            Dim reg(regCount - 1) As Integer
+            For i As Integer = 0 To regCount - 1
+                reg(i) = makeuint(byteresult(i * 2), byteresult(i * 2 + 1))                     ''TODO  SIZE BUFFER DE LECTURE DES REGISTRES !!!!!!!!!!!!!!!
+            Next
+
+            ' Mapping adresse -> variable (offset depuis 3400)
+            ' 3400=Finish(ignore), 3401=vide, 3402=Firing, 3403=I_Limit,
+            ' 3404=I2_Transfer, 3405=Control, 3406=Heater, 3407=AI_Fct,
+            ' 3408=AI_Type, 3409=DI2_Fct, 3410=Xfmr, 3411=I_Nominal, 3412=V_Nominal
+            TCP_Var.Firing = reg(2)   '3402
+            TCP_Var.I_Limit = reg(3)   '3403
+            TCP_Var.I2_Transfer = reg(4)   '3404
+            TCP_Var.Control = reg(5)   '3405
+            TCP_Var.Heater = reg(6)   '3406
+            TCP_Var.AI_Fct = reg(7)   '3407
+            TCP_Var.AI_Type = reg(8)   '3408
+            TCP_Var.DI2_Fct = reg(9)   '3409
+            TCP_Var.Xfmr = reg(10)  '3410
+            TCP_Var.I_Nominal = reg(11)  '3411
+            TCP_Var.V_Nominal = reg(12)  '3412
+
+            ' DI1_Fct separee a 3418 (trop loin pour le bloc)
+            modbustcp.ReadInteger(1, 3418, TCP_Var.DI1_Fct)
+
+            If TextBox Then
+                Dim result As String = ""
+                Dim names() As String = {
+                "Finish", "?", "Firing", "I_Limit", "I2_Transfer",
+                "Control", "Heater", "AI_Fct", "AI_Type", "DI2_Fct",
+                "Xfmr", "I_Nominal", "V_Nominal"}
+                For i As Integer = 0 To regCount - 1
+                    result &= names(i) & " [" & (startAddr + i).ToString() & "] = " &
+                          reg(i).ToString() & vbCrLf
+                Next
+                result &= "DI1_Fct [3418] = " & TCP_Var.DI1_Fct.ToString()
                 MsgBox(result)
             End If
 

@@ -468,7 +468,7 @@ Partial Class MeterWindow
         Label_SampleRate_Title.ForeColor = Drawing.Color.FromArgb(0, 210, 180)
         Timer_Flash.Start()
 
-        If Not IsConnected() AndAlso Not IsDemoMode Then
+        If Not IsConnected() AndAlso Not ModbusTcpMaster.modbustcpisconnected AndAlso Not IsDemoMode Then
             If Not _lossAlreadyHandled Then
                 _lossAlreadyHandled = True
                 Main_Chart.PauseStopwatch()
