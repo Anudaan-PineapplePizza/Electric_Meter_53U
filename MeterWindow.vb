@@ -183,7 +183,7 @@ Public Class MeterWindow
             Timer_Sample.Start()
         End If
         UpdateSamplingButton()
-        UpdateChartPauseButton()
+        'UpdateChartPauseButton()
         UpdateRecordButton()
 
         ' En mode demo : afficher un indicateur visuel
@@ -267,7 +267,7 @@ Public Class MeterWindow
                     Panel_FooterChartGroup.Visible = False
                     SetTabInactive(Button_ViewLive)
                     SetTabActive(Button_ViewHarmonics)
-                    UpdateFreezePauseButton()
+                    'UpdateFreezePauseButton()
                     If Not _isHdPanelBuilt Then
                         InitHdPanel()
                         _isHdPanelBuilt = True
@@ -295,7 +295,11 @@ Public Class MeterWindow
     End Sub
     Private Sub Button_ViewHistorical_Click(s As Object, e As EventArgs) Handles Button_ViewHistorical.Click
         Dim wasRunning As Boolean = Timer_Sample.Enabled
-        If wasRunning Then Timer_Sample.Stop()
+        If wasRunning Then
+            Timer_Sample.Stop()
+            'UpdateChartPauseButton()
+            UpdateSamplingButton()
+        End If
 
         Dim hw As New HistoricalWindow()
         AddHandler hw.FormClosed, Sub(fs As Object, fe As FormClosedEventArgs)
@@ -328,7 +332,7 @@ Public Class MeterWindow
         UpdateAxisGroupHighlight()
         SyncY1Y2CombosFromPrefs()
         If Timer_Sample.Enabled AndAlso Not _isChartFrozen Then Main_Chart.StartStopwatch()
-        UpdateChartPauseButton()
+        'UpdateChartPauseButton()
 
         ' HD rebuild
         InitHdPanel()

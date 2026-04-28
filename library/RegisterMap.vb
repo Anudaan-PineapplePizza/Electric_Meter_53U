@@ -252,12 +252,12 @@ Public Module RegisterMap
         'If using TCP-Epack
 
         If ModbusTcpMaster.modbustcpisconnected Then
-            r.Add(New RegisterDef(SignalID.ePack_Vline, "ePack V Line", "V", 100.0, 0, 500, Color.FromArgb(100, 220, 180), SignalGroup.ePack, 256, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Vline, "ePack V Line", "V", 10.0, 0, 500, Color.FromArgb(40, 120, 245), SignalGroup.ePack, 256, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Irms, "ePack I rms", "A", 100.0, 0, 100, Color.FromArgb(0, 200, 140), SignalGroup.ePack, 257, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Isqburst, "ePack Iburst", "A", 100.0, 0, 5000, Color.FromArgb(0, 170, 110), SignalGroup.ePack, 258, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Isq, "ePack I", "A", 100.0, 0, 5000, Color.FromArgb(0, 140, 90), SignalGroup.ePack, 259, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Vrms, "ePack Vrms", "V", 100.0, 0, 500, Color.FromArgb(80, 180, 255), SignalGroup.ePack, 260, 2, True, False))
-            r.Add(New RegisterDef(SignalID.ePack_Vsq, "ePack V", "V", 100.0, 0, 90000, Color.FromArgb(60, 150, 235), SignalGroup.ePack, 261, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Isqburst, "ePack Iburst", "A", 10.0, 0, 5000, Color.FromArgb(0, 170, 110), SignalGroup.ePack, 258, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Isq, "ePack I", "A", 10.0, 0, 5000, Color.FromArgb(0, 140, 90), SignalGroup.ePack, 259, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Vrms, "ePack Vrms", "V", 10.0, 0, 500, Color.FromArgb(80, 180, 255), SignalGroup.ePack, 260, 2, True, False))
+            r.Add(New RegisterDef(SignalID.ePack_Vsq, "ePack V", "V", 10.0, 0, 90000, Color.FromArgb(60, 150, 235), SignalGroup.ePack, 261, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_Pburst, "ePack P burst", "W", 100.0, 0, 50000, Color.FromArgb(255, 210, 80), SignalGroup.ePack, 262, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_P, "ePack P", "W", 100.0, 0, 50000, Color.FromArgb(255, 185, 50), SignalGroup.ePack, 263, 2, True, False))
             r.Add(New RegisterDef(SignalID.ePack_S, "ePack S", "VA", 100.0, 0, 50000, Color.FromArgb(200, 130, 255), SignalGroup.ePack, 264, 2, True, False))

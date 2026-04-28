@@ -275,6 +275,7 @@ Partial Class HistoricalWindow
         Label_CursorTime.Text = "t = --"
         ' Fermer le drawer apres Apply
         CloseAxesDrawer()
+        SetChartModeZoom()
     End Sub
 
     Private Sub ResetAxesToPrefs()

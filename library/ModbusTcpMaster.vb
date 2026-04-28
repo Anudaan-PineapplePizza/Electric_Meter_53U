@@ -77,14 +77,16 @@
         d(SignalID.ePack_Frequency) = TCP_Var.frequency
         d(SignalID.ePack_Vsqburst) = TCP_Var.vsqburst
 
-        d(SignalID.ePack_Ramping) = TCP_Var.Ramping
+        ' Inverser : 1 = ramping actif, 0 = inactif (plus intuitif)
+        d(SignalID.ePack_Ramping) = If(TCP_Var.Ramping = 0, 1.0, 0.0)
+
         Return d
     End Function
 
     '=========================================================================
     ' READ EPACK 
     '
-    ' Argument : true to display Readed Values on a TextBox
+    ' Argument : true to display Readed Values on a TextBox 
     '=========================================================================
     Public Sub Read_epackTCP(TextBox As Boolean)
         Dim byteresult(61) As Byte
@@ -111,7 +113,10 @@
             TCP_Var.frequency = reg(11)
             TCP_Var.vsqburst = reg(12)
 
-            modbustcp.ReadInteger(1, 1440, TCP_Var.Ramping)
+            Dim rampBuf(21) As Byte
+            If modbustcp.Read_NChar(1, 1440, rampBuf, 20) Then
+                TCP_Var.Ramping = makeuint(rampBuf(0), rampBuf(1))
+            End If
 
             If TextBox Then
                 Dim names() As String = {
@@ -163,7 +168,10 @@
             TCP_Var.I_Nominal = reg(11)
             TCP_Var.V_Nominal = reg(12)
 
-            modbustcp.ReadInteger(1, 3418, TCP_Var.DI1_Fct)
+            Dim di1Buf(21) As Byte
+            If modbustcp.Read_NChar(1, 3418, di1Buf, 20) Then
+                TCP_Var.DI1_Fct = makeuint(di1Buf(0), di1Buf(1))
+            End If
 
             If TextBox Then
                 Dim names() As String = {

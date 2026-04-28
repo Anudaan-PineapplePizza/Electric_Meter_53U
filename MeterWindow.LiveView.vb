@@ -587,49 +587,49 @@ Partial Class MeterWindow
         End If
     End Sub
 
-    ' FOOTER — CHART FREEZE / RESET / PREFERENCES
-    Private Sub Button_ChartPause_Click(sender As Object, e As EventArgs) Handles Button_ChartPause.Click
-        If Panel_HD.Visible Then
-            ' HD view: toggle HD freeze
-            _isHdFrozen = Not _isHdFrozen
-        Else
-            ' Live view: toggle chart freeze
-            _isChartFrozen = Not _isChartFrozen
-            If _isChartFrozen Then
-                Main_Chart.PauseStopwatch()
-            ElseIf Timer_Sample.Enabled Then
-                Main_Chart.StartStopwatch()
-            End If
-        End If
-        UpdateFreezePauseButton()
-    End Sub
+    '' FOOTER — CHART FREEZE / RESET / PREFERENCES
+    'Private Sub Button_ChartPause_Click(sender As Object, e As EventArgs) Handles Button_ChartPause.Click
+    '    If Panel_HD.Visible Then
+    '        ' HD view: toggle HD freeze
+    '        _isHdFrozen = Not _isHdFrozen
+    '    Else
+    '        ' Live view: toggle chart freeze
+    '        _isChartFrozen = Not _isChartFrozen
+    '        If _isChartFrozen Then
+    '            Main_Chart.PauseStopwatch()
+    '        ElseIf Timer_Sample.Enabled Then
+    '            Main_Chart.StartStopwatch()
+    '        End If
+    '    End If
+    '    UpdateFreezePauseButton()
+    'End Sub
 
-    Friend Sub UpdateChartPauseButton()
-        UpdateFreezePauseButton()
-    End Sub
+    'Friend Sub UpdateChartPauseButton()
+    '    UpdateFreezePauseButton()
+    'End Sub
 
-    Friend Sub UpdateFreezePauseButton()
+    'Friend Sub UpdateFreezePauseButton()
 
-        If _isHdFrozen Then
-            Button_ChartPause.BackColor = Drawing.Color.FromArgb(110, 22, 22)
-            Button_ChartPause.ForeColor = Drawing.Color.FromArgb(255, 180, 180)
-            Button_ChartPause.Text = "▶ HD"
-        Else
-            Button_ChartPause.BackColor = Drawing.Color.FromArgb(14, 72, 148)
-            Button_ChartPause.ForeColor = Drawing.Color.FromArgb(170, 215, 255)
-            Button_ChartPause.Text = "❄ FREEZE"
-        End If
+    '    If _isHdFrozen Then
+    '        Button_ChartPause.BackColor = Drawing.Color.FromArgb(110, 22, 22)
+    '        Button_ChartPause.ForeColor = Drawing.Color.FromArgb(255, 180, 180)
+    '        Button_ChartPause.Text = "▶ HD"
+    '    Else
+    '        Button_ChartPause.BackColor = Drawing.Color.FromArgb(14, 72, 148)
+    '        Button_ChartPause.ForeColor = Drawing.Color.FromArgb(170, 215, 255)
+    '        Button_ChartPause.Text = "❄ FREEZE"
+    '    End If
 
-        If _isChartFrozen Then
-            Button_ChartPause.BackColor = Drawing.Color.FromArgb(110, 22, 22)
-            Button_ChartPause.ForeColor = Drawing.Color.FromArgb(255, 180, 180)
-            Button_ChartPause.Text = "▶ LIVE"
-        Else
-            Button_ChartPause.BackColor = Drawing.Color.FromArgb(14, 72, 148)
-            Button_ChartPause.ForeColor = Drawing.Color.FromArgb(170, 215, 255)
-            Button_ChartPause.Text = "❄ FREEZE"
-        End If
-    End Sub
+    '    If _isChartFrozen Then
+    '        Button_ChartPause.BackColor = Drawing.Color.FromArgb(110, 22, 22)
+    '        Button_ChartPause.ForeColor = Drawing.Color.FromArgb(255, 180, 180)
+    '        Button_ChartPause.Text = "▶ LIVE"
+    '    Else
+    '        Button_ChartPause.BackColor = Drawing.Color.FromArgb(14, 72, 148)
+    '        Button_ChartPause.ForeColor = Drawing.Color.FromArgb(170, 215, 255)
+    '        Button_ChartPause.Text = "❄ FREEZE"
+    '    End If
+    'End Sub
 
     Private Sub Button_ChartReset_Click(sender As Object, e As EventArgs) Handles Button_ChartReset.Click
         ChartReset()
@@ -641,7 +641,7 @@ Partial Class MeterWindow
         Main_Chart.ResetChart()
         _isChartReady = True : _isChartFrozen = False
         If Timer_Sample.Enabled Then Main_Chart.StartStopwatch()
-        UpdateChartPauseButton()
+        'UpdateChartPauseButton()
         Main_Chart.SetAxisGroups(_prefs.Y1GroupIndex, _prefs.Y2GroupIndex)
         ApplyAllChartSignalStates()
         UpdateAxisGroupHighlight()
