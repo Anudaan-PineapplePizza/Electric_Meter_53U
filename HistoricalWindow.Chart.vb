@@ -8,22 +8,12 @@ Imports System.Collections.Generic
 
 ' =============================================================================
 ' HistoricalWindow.Chart.vb  -- Partial Class (3/6)
-'
-' Structure identique a Historicals_ChartGases :
-'   - HistChartPanel herite ChartView
-'   - chartVu As ChartView = Me  (pas As Object)
-'   - Me.GetChartObjectsArrayList.Clear() + Me.ResetMouseListeners() sur Me
-'   - zoomObj et cursorObj crees mais PAS ajoutes via AddChartObject
-'   - SetCurrentMouseListener(zoomObj/cursorObj) pour changer de mode
-'   - CustomChartDataCursor identique a l exemple avec timer anti-bounce
 ' =============================================================================
 
 Public Class HistChartPanel
     Inherits ChartView
 
-    ' Exactement comme dans l exemple : As ChartView = Me
     Private chartVu As ChartView = Me
-
     Public Event CursorMoved(xPos As Double)
 
     Private Enum T_MOUSE_MODE
@@ -42,7 +32,6 @@ Public Class HistChartPanel
         Me.BackColor = Drawing.Color.FromArgb(12, 18, 32)
     End Sub
 
-    ' ── InitializeChart — structure identique a l exemple ────────────────────
     Public Sub InitializeChart(tMin As Double, tMax As Double,
                                yMin As Double, yMax As Double,
                                unitLabel As String,
@@ -50,9 +39,7 @@ Public Class HistChartPanel
                                signals As List(Of HistoricalWindow.CsvSignal),
                                sigIndices As List(Of Integer),
                                Optional tabColor As Drawing.Color = Nothing)
-        ' Note: Drawing.Color est un struct, Nothing == Color.Empty
         Try
-            ' Comme dans l exemple : Clear + ResetMouseListeners sur Me
             Me.GetChartObjectsArrayList.Clear()
             Me.ResetMouseListeners()
             _plotList.Clear()
@@ -64,10 +51,8 @@ Public Class HistChartPanel
             pTransform.SetCoordinateBounds(tMin, yMin, tMax, yMax)
             pTransform.SetGraphBorderDiagonal(0.13, 0.06, 0.93, 0.9)
 
-            ' Fond
             chartVu.AddChartObject(New Background(pTransform, ChartObj.GRAPH_BACKGROUND,
                                                   Drawing.Color.FromArgb(12, 18, 32)))
-            ' Axe X
             Dim axX As New LinearAxis(pTransform, ChartObj.X_AXIS)
             axX.LineColor = Drawing.Color.FromArgb(80, 100, 140)
             chartVu.AddChartObject(axX)
@@ -79,7 +64,6 @@ Public Class HistChartPanel
             axXTitle.SetColor(Drawing.Color.FromArgb(100, 130, 170))
             chartVu.AddChartObject(axXTitle)
 
-            ' Axe Y avec label unite
             Dim axY As New LinearAxis(pTransform, ChartObj.Y_AXIS, yMin, yMax)
             axY.LineColor = Drawing.Color.FromArgb(120, 145, 180)
             axY.AxisTickDir = ChartObj.AXIS_MIN
@@ -97,7 +81,6 @@ Public Class HistChartPanel
                 chartVu.AddChartObject(axYTitle)
             End If
 
-            ' Grilles
             Dim xGrid As New Grid(axX, axY, ChartObj.X_AXIS, ChartObj.GRID_MAJOR)
             xGrid.SetColor(Drawing.Color.FromArgb(36, 50, 76))
             chartVu.AddChartObject(xGrid)
@@ -105,7 +88,6 @@ Public Class HistChartPanel
             yGrid.SetColor(Drawing.Color.FromArgb(36, 50, 76))
             chartVu.AddChartObject(yGrid)
 
-            ' Courbes
             For Each i As Integer In sigIndices
                 Dim sig As HistoricalWindow.CsvSignal = signals(i)
                 Dim ds As New SimpleDataset(sig.Name, timeData, sig.Values)
@@ -116,7 +98,6 @@ Public Class HistChartPanel
                 _plotList.Add(plt)
             Next
 
-            ' Zoom — cree mais pas AddChartObject (identique a l exemple)
             Dim transformArray As CartesianCoordinates() = {pTransform}
             zoomObj = New ZoomWithStack(chartVu, transformArray, 1, True)
             zoomObj.SetButtonMask(System.Windows.Forms.MouseButtons.Left)
@@ -128,36 +109,31 @@ Public Class HistChartPanel
             zoomObj.SetZoomStackEnable(True)
             zoomObj.SetColor(Drawing.Color.FromArgb(180, 200, 230))
 
-            ' Curseur — cree mais pas AddChartObject (identique a l exemple)
-            dataCursorObj = New CustomChartDataCursor(chartVu, pTransform, ChartObj.MARKER_VLINE, 8, Me)
+            dataCursorObj = New CustomChartDataCursor(chartVu, pTransform,
+                                ChartObj.MARKER_VLINE, 8, Me)
             dataCursorObj.SetEnable(True)
             dataCursorObj.MouseMarker.SetColor(Drawing.Color.FromArgb(255, 30, 60))
 
-            ' Mode par defaut : zoom (identique a l exemple)
             If MouseMode = T_MOUSE_MODE.MODE_ZOOM Then
                 chartVu.SetCurrentMouseListener(zoomObj)
             Else
                 chartVu.SetCurrentMouseListener(dataCursorObj)
             End If
-
             chartVu.ResizeMode = 0
 
         Catch ex As Exception
-            ' Ne pas crasher
         Finally
             Me.Refresh()
         End Try
     End Sub
 
-    ' ── SetZoom / SetCursor — identique a l exemple ───────────────────────────
-    ' Masque ou affiche un plot par son index local dans ce panneau
     Public Sub SetPlotVisible(localIdx As Integer, visible As Boolean)
         If localIdx < 0 OrElse localIdx >= _plotList.Count Then Return
-        _plotList(localIdx).SetChartObjEnable(If(visible, ChartObj.OBJECT_ENABLE, ChartObj.OBJECT_DISABLE))
+        _plotList(localIdx).SetChartObjEnable(
+            If(visible, ChartObj.OBJECT_ENABLE, ChartObj.OBJECT_DISABLE))
         chartVu.UpdateDraw()
     End Sub
 
-    ' Titre complet de l axe Y selon l unite
     Private Shared Function GetFullYLabel(unit As String) As String
         Select Case unit.ToUpper()
             Case "A" : Return "Current (A)"
@@ -184,20 +160,17 @@ Public Class HistChartPanel
         chartVu.SetCurrentMouseListener(dataCursorObj)
     End Sub
 
-    ' Re-leve l evenement CursorMoved depuis la classe declarante
     Friend Sub RaiseCursorMoved(xPos As Double)
         RaiseEvent CursorMoved(xPos)
     End Sub
 
-    ' ── ZoomWithStack — identique a l exemple ─────────────────────────────────
     Private Class ZoomWithStack
         Inherits ChartZoom
-
-        Public Sub New(ByVal component As ChartView, ByVal transforms() As CartesianCoordinates,
+        Public Sub New(ByVal component As ChartView,
+                       ByVal transforms() As CartesianCoordinates,
                        ByVal n As Integer, ByVal brescale As Boolean)
             MyBase.New(component, transforms, brescale)
         End Sub
-
         Public Overrides Sub OnMouseDown(ByVal mouseevent As System.Windows.Forms.MouseEventArgs)
             If (mouseevent.Button And System.Windows.Forms.MouseButtons.Right) <> 0 Then
                 Me.PopZoomStack()
@@ -207,15 +180,11 @@ Public Class HistChartPanel
         End Sub
     End Class
 
-    ' ── CustomChartDataCursor — identique a l exemple ─────────────────────────
-    ' Avec timer anti-bounce exactement comme dans Historicals_ChartGases
     Friend Class CustomChartDataCursor
         Inherits DataCursor
-
         Private EventRun As Boolean = False
         Private TimerCursor As System.Timers.Timer
-        Private _owner As HistChartPanel   ' pour remonter l evenement
-
+        Private _owner As HistChartPanel
         Public Sub New(ByVal achartview As ChartView,
                        ByVal thetransform As CartesianCoordinates,
                        ByVal nmarkertype As Integer,
@@ -227,7 +196,6 @@ Public Class HistChartPanel
             TimerCursor.Interval = 100
             AddHandler TimerCursor.Elapsed, AddressOf TimerElapsed
         End Sub
-
         Public Overrides Sub OnMouseMove(ByVal mouseevent As System.Windows.Forms.MouseEventArgs)
             If EventRun Then Return
             If (mouseevent.Button And GetButtonMask()) <> 0 Then
@@ -238,7 +206,6 @@ Public Class HistChartPanel
                 TimerCursor.Start()
             End If
         End Sub
-
         Public Overrides Sub OnMouseDown(ByVal mouseevent As System.Windows.Forms.MouseEventArgs)
             If (mouseevent.Button And GetButtonMask()) <> 0 Then
                 MyBase.OnMouseDown(mouseevent)
@@ -246,8 +213,8 @@ Public Class HistChartPanel
                 _owner.RaiseCursorMoved(loc.X)
             End If
         End Sub
-
-        Private Sub TimerElapsed(ByVal sender As Object, ByVal e As System.Timers.ElapsedEventArgs)
+        Private Sub TimerElapsed(ByVal sender As Object,
+                                  ByVal e As System.Timers.ElapsedEventArgs)
             EventRun = False
         End Sub
     End Class
@@ -260,47 +227,50 @@ End Class
 Partial Class HistoricalWindow
 
 #Region "Champs"
+
     Private _tabPanels As New Dictionary(Of String, HistChartPanel)()
     Private _cursorX As Double = 0.0
-    ' Mapping : index global signal -> (tabName, localIdx dans ce tab)
     Friend _sigTabMap As New Dictionary(Of Integer, List(Of (TabName As String, LocalIdx As Integer)))()
+
 #End Region
 
 #Region "Build chart"
 
     Friend Sub BuildChart(data As CsvData)
         If data Is Nothing OrElse data.TimeData.Length = 0 Then Return
+
+        ' Filtrer les donnees selon la plage temporelle de session
+        Dim workData As CsvData = FilterDataByTime(data, _sessionTMin, _sessionTMax)
+
         TabControl_Charts.TabPages.Clear()
         _tabPanels.Clear()
         _sigTabMap.Clear()
         TabControl_Charts.ItemSize = New Size(72, 22)
 
-        Dim tMin As Double = data.TimeData(0)
-        Dim tMax As Double = data.TimeData(data.TimeData.Length - 1)
+        Dim tMin As Double = workData.TimeData(0)
+        Dim tMax As Double = workData.TimeData(workData.TimeData.Length - 1)
         If tMax <= tMin Then tMax = tMin + 1.0
 
-        ' Grouper par unite
+        ' Grouper par unite (sur workData)
         Dim groups As New Dictionary(Of String, List(Of Integer))()
-        For i As Integer = 0 To data.Signals.Count - 1
-            Dim key As String = GroupKeyForSignal(data.Signals(i))
+        For i As Integer = 0 To workData.Signals.Count - 1
+            Dim key As String = GroupKeyForSignal(workData.Signals(i))
             If Not groups.ContainsKey(key) Then groups(key) = New List(Of Integer)()
             groups(key).Add(i)
         Next
 
-        ' Tab special "All Powers" : regroupe W, VAR, VA
+        ' Tab All Powers
         Dim powerKeys As New HashSet(Of String)(
             {"Active Power (W)", "Reactive Power (VAR)", "Apparent Power (VA)"})
         Dim allPowerIndices As New List(Of Integer)()
         For Each key As String In powerKeys
-            If groups.ContainsKey(key) Then
-                allPowerIndices.AddRange(groups(key))
-            End If
+            If groups.ContainsKey(key) Then allPowerIndices.AddRange(groups(key))
         Next
         If allPowerIndices.Count > 0 Then
-            AddChartTab("All Powers", allPowerIndices, tMin, tMax, data)
+            AddChartTab("All Powers", allPowerIndices, tMin, tMax, workData)
         End If
 
-        ' Tabs individuels dans l ordre : Current, Voltage L-L, Voltage L-N, powers, PF, Hz, THD, reste
+        ' Tabs individuels dans l ordre
         Dim orderedKeys As New List(Of String)() From {
             "Current (A)", "Voltage L-L (V)", "Voltage L-N (V)",
             "Active Power (W)", "Reactive Power (VAR)", "Apparent Power (VA)",
@@ -308,13 +278,12 @@ Partial Class HistoricalWindow
             "Phase Dir"}
         For Each key As String In orderedKeys
             If groups.ContainsKey(key) Then
-                AddChartTab(key, groups(key), tMin, tMax, data)
+                AddChartTab(key, groups(key), tMin, tMax, workData)
             End If
         Next
-        ' Groupes non reconnus
         For Each kvp As KeyValuePair(Of String, List(Of Integer)) In groups
             If Not orderedKeys.Contains(kvp.Key) Then
-                AddChartTab(kvp.Key, kvp.Value, tMin, tMax, data)
+                AddChartTab(kvp.Key, kvp.Value, tMin, tMax, workData)
             End If
         Next
 
@@ -322,7 +291,53 @@ Partial Class HistoricalWindow
         TabControl_Charts.Refresh()
     End Sub
 
-    ' Nom court de l onglet base sur l unite / groupe
+    ' ── Filtre les donnees selon la plage temporelle de session ──────────────
+    Private Shared Function FilterDataByTime(data As CsvData,
+                                              tMin As Double,
+                                              tMax As Double) As CsvData
+        Dim hasMin As Boolean = Not Double.IsNaN(tMin)
+        Dim hasMax As Boolean = Not Double.IsNaN(tMax)
+        If Not hasMin AndAlso Not hasMax Then Return data
+
+        Dim actualMin As Double = If(hasMin, tMin, data.TimeData(0))
+        Dim actualMax As Double = If(hasMax, tMax, data.TimeData(data.TimeData.Length - 1))
+
+        ' Trouver les indices de debut et de fin
+        Dim startIdx As Integer = 0
+        Dim endIdx As Integer = data.TimeData.Length - 1
+        For i As Integer = 0 To data.TimeData.Length - 1
+            If data.TimeData(i) >= actualMin Then startIdx = i : Exit For
+        Next
+        For i As Integer = data.TimeData.Length - 1 To 0 Step -1
+            If data.TimeData(i) <= actualMax Then endIdx = i : Exit For
+        Next
+        If startIdx > endIdx Then Return data
+
+        Dim count As Integer = endIdx - startIdx + 1
+        Dim filtered As New CsvData()
+        filtered.FilePath = data.FilePath
+        filtered.RecordDate = data.RecordDate
+        filtered.SampleIntervalMs = data.SampleIntervalMs
+        filtered.HasHd = data.HasHd
+        filtered.HdGroups = data.HdGroups
+        filtered.HdOrders = data.HdOrders
+
+        filtered.TimeData = New Double(count - 1) {}
+        Array.Copy(data.TimeData, startIdx, filtered.TimeData, 0, count)
+
+        For Each sig As CsvSignal In data.Signals
+            Dim newSig As CsvSignal = sig
+            Dim newVals(count - 1) As Double
+            If sig.Values IsNot Nothing AndAlso sig.Values.Length > endIdx Then
+                Array.Copy(sig.Values, startIdx, newVals, 0, count)
+            End If
+            newSig.Values = newVals
+            filtered.Signals.Add(newSig)
+        Next
+
+        Return filtered
+    End Function
+
     Friend Shared Function GroupKeyForSignal(sig As CsvSignal) As String
         Select Case sig.Unit.ToUpper()
             Case "A" : Return "Current (A)"
@@ -332,24 +347,23 @@ Partial Class HistoricalWindow
             Case "PF" : Return "Power Factor (PF)"
             Case "HZ" : Return "Frequency (Hz)"
             Case "%"
-                ' Distinguer THD courant vs tension par le nom du signal
-                If sig.Name.ToUpper().Contains("THDI") OrElse sig.Name.ToUpper().Contains("THD I") OrElse
+                If sig.Name.ToUpper().Contains("THDI") OrElse
+                   sig.Name.ToUpper().Contains("THD I") OrElse
                    sig.Name.ToUpper().Contains("CURRENT") Then
                     Return "THD Current (%)"
                 Else
                     Return "THD Voltage (%)"
                 End If
         End Select
-        ' Distinguer tension L-L vs L-N si pas d unite standard
         If sig.Unit.ToUpper() = "V" Then
-            If sig.Name.ToUpper().Contains("L-N") OrElse sig.Name.ToUpper().Contains("LN") OrElse
+            If sig.Name.ToUpper().Contains("L-N") OrElse
+               sig.Name.ToUpper().Contains("LN") OrElse
                sig.Name.ToUpper().EndsWith("N") Then
                 Return "Voltage L-N (V)"
             Else
                 Return "Voltage L-L (V)"
             End If
         End If
-        ' Fallback : chercher dans AxisGroups
         For Each ag As UserPreferences.AxisGroupDef In UserPreferences.AxisGroups
             If ag.Unit.ToUpper() = sig.Unit.ToUpper() Then
                 Return ag.Name & If(ag.Unit <> "", " (" & ag.Unit & ")", "")
@@ -359,16 +373,11 @@ Partial Class HistoricalWindow
     End Function
 
     Friend Function GetYBounds(sigIndices As List(Of Integer),
-                                       signals As List(Of CsvSignal)) As (yMin As Double, yMax As Double)
+                                signals As List(Of CsvSignal)) As (yMin As Double, yMax As Double)
         If sigIndices.Count = 0 Then Return (0.0, 1.0)
         Dim tabKey As String = GroupKeyForSignal(signals(sigIndices(0)))
+        If _sessionYBounds.ContainsKey(tabKey) Then Return _sessionYBounds(tabKey)
 
-        ' Priorite 1 : bornes de session (reglees dans le drawer Axes)
-        If _sessionYBounds.ContainsKey(tabKey) Then
-            Return _sessionYBounds(tabKey)
-        End If
-
-        ' Priorite 2 : UserPreferences
         Dim unit As String = signals(sigIndices(0)).Unit
         For Each ag As UserPreferences.AxisGroupDef In UserPreferences.AxisGroups
             If ag.Unit.ToUpper() = unit.ToUpper() AndAlso ag.Members.Length > 0 Then
@@ -379,7 +388,7 @@ Partial Class HistoricalWindow
                 End If
             End If
         Next
-        ' Fallback auto
+
         Dim yMin As Double = Double.MaxValue
         Dim yMax As Double = Double.MinValue
         For Each i As Integer In sigIndices
@@ -396,17 +405,15 @@ Partial Class HistoricalWindow
 
     Private Sub AddChartTab(tabName As String, sigIndices As List(Of Integer),
                              tMin As Double, tMax As Double, data As CsvData)
-        ' Pour les tabs multi-unites (ex: All Powers), calculer les bornes auto
         Dim unit As String = data.Signals(sigIndices(0)).Unit
         Dim allSameUnit As Boolean = True
         For Each idx As Integer In sigIndices
             If data.Signals(idx).Unit <> unit Then allSameUnit = False : Exit For
         Next
-        If Not allSameUnit Then unit = ""  ' unite mixte : pas de label Y
+        If Not allSameUnit Then unit = ""
 
         Dim bounds As (yMin As Double, yMax As Double)
         If Not allSameUnit Then
-            ' Bornes auto sur toutes les valeurs
             Dim yMin As Double = Double.MaxValue
             Dim yMax As Double = Double.MinValue
             For Each idx As Integer In sigIndices
@@ -428,7 +435,6 @@ Partial Class HistoricalWindow
         TabControl_Charts.TabPages.Add(tab)
 
         Dim tabClr As Drawing.Color = GetTabColor(tabName)
-
         Dim panel As New HistChartPanel()
         panel.Dock = DockStyle.Fill
         panel.InitializeChart(tMin, tMax, bounds.yMin, bounds.yMax,
@@ -437,7 +443,6 @@ Partial Class HistoricalWindow
         tab.Controls.Add(panel)
         _tabPanels(tabName) = panel
 
-        ' Enregistrer le mapping global->local (liste pour signaux dans plusieurs tabs)
         For localIdx As Integer = 0 To sigIndices.Count - 1
             Dim gIdx As Integer = sigIndices(localIdx)
             If Not _sigTabMap.ContainsKey(gIdx) Then
@@ -447,7 +452,6 @@ Partial Class HistoricalWindow
         Next
     End Sub
 
-    ' Nom court pour affichage dans l onglet (preserves la cle interne)
     Private Shared Function ShortTabName(fullName As String) As String
         Select Case fullName
             Case "Current (A)" : Return "I (A)"
@@ -520,6 +524,8 @@ Partial Class HistoricalWindow
         UpdateHdPanelAtCursor(xPos)
     End Sub
 
+    ' Cherche dans _csvData (donnees completes, pas filtrees) pour que
+    ' les valeurs cursor soient correctes meme apres un filtre temporel
     Friend Function FindNearestTickIndex(xPos As Double) As Integer
         If _csvData Is Nothing OrElse _csvData.TimeData.Length = 0 Then Return 0
         Dim best As Integer = 0

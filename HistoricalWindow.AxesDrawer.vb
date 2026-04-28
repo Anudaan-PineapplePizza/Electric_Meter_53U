@@ -1,4 +1,4 @@
-Option Strict On
+﻿Option Strict On
 Option Explicit On
 
 Imports System.Collections.Generic
@@ -6,12 +6,6 @@ Imports System.Globalization
 
 ' =============================================================================
 ' HistoricalWindow.AxesDrawer.vb  -- Partial Class (7/7)
-'
-' Drawer lateral (overlay, 320px).
-' DGV : Group | Min | Max | Scale
-'   Scale = combo �1000 / �100 / �10 / �1 / �10 / �100 / �1000
-'   Applique un facteur multiplicatif sur Min/Max avant passage au graphique.
-' Apply -> ferme le drawer + reconstruit les graphiques.
 ' =============================================================================
 Partial Class HistoricalWindow
 
@@ -22,7 +16,12 @@ Partial Class HistoricalWindow
     Private Const DrawerW As Integer = 320
 
     Friend _sessionYBounds As New Dictionary(Of String, (yMin As Double, yMax As Double))()
+    Friend _sessionTMin As Double = Double.NaN
+    Friend _sessionTMax As Double = Double.NaN
+
     Private _axesDgv As DataGridView = Nothing
+
+    Private Const KEY_TIME As String = "TIME"
 
 #End Region
 
@@ -68,7 +67,6 @@ Partial Class HistoricalWindow
                                                End Using
                                            End Sub
 
-        ' Bande titre
         Dim pTitle As New Panel()
         pTitle.BackColor = clrHdr
         pTitle.Dock = DockStyle.Top
@@ -83,7 +81,6 @@ Partial Class HistoricalWindow
         lbl.AutoSize = True
         pTitle.Controls.Add(lbl)
 
-        ' Bouton fermeture : bien carre, ancre droite, label centre
         Dim btnClose As New Button()
         btnClose.Text = "X"
         btnClose.Size = New Size(26, 26)
@@ -99,7 +96,6 @@ Partial Class HistoricalWindow
         pTitle.Controls.Add(btnClose)
         btnClose.BringToFront()
 
-        ' DGV
         _axesDgv = New DataGridView()
         _axesDgv.BackgroundColor = Drawing.Color.FromArgb(14, 20, 36)
         _axesDgv.BorderStyle = BorderStyle.None
@@ -142,11 +138,11 @@ Partial Class HistoricalWindow
         cGrp.SortMode = DataGridViewColumnSortMode.NotSortable
         _axesDgv.Columns.Add(cGrp)
 
-        ' Colonne Min
+        ' Colonne Min (Start pour le temps)
         Dim cMin As New DataGridViewTextBoxColumn()
-        cMin.HeaderText = "Min"
+        cMin.HeaderText = "Min / Start"
         cMin.Name = "ACol_Min"
-        cMin.Width = 55
+        cMin.Width = 70
         cMin.SortMode = DataGridViewColumnSortMode.NotSortable
         Dim csMin As New DataGridViewCellStyle()
         csMin.Alignment = DataGridViewContentAlignment.MiddleRight
@@ -154,11 +150,11 @@ Partial Class HistoricalWindow
         cMin.DefaultCellStyle = csMin
         _axesDgv.Columns.Add(cMin)
 
-        ' Colonne Max
+        ' Colonne Max (End pour le temps)
         Dim cMax As New DataGridViewTextBoxColumn()
-        cMax.HeaderText = "Max"
+        cMax.HeaderText = "Max / End"
         cMax.Name = "ACol_Max"
-        cMax.Width = 55
+        cMax.Width = 70
         cMax.SortMode = DataGridViewColumnSortMode.NotSortable
         Dim csMax As New DataGridViewCellStyle()
         csMax.Alignment = DataGridViewContentAlignment.MiddleRight
@@ -168,7 +164,6 @@ Partial Class HistoricalWindow
 
         Panel_AxesDrawer.Controls.Add(_axesDgv)
 
-        ' Bouton Apply (ferme le drawer apres application)
         Dim btnApply As New Button()
         btnApply.Text = "Apply"
         btnApply.Size = New Size(80, 28)
@@ -182,7 +177,6 @@ Partial Class HistoricalWindow
         AddHandler btnApply.Click, Sub(s As Object, e As EventArgs) ApplyAxesChanges()
         Panel_AxesDrawer.Controls.Add(btnApply)
 
-        ' Bouton Reset
         Dim btnReset As New Button()
         btnReset.Text = "Reset"
         btnReset.Size = New Size(70, 28)
@@ -204,6 +198,27 @@ Partial Class HistoricalWindow
         Dim ci As CultureInfo = CultureInfo.InvariantCulture
         _axesDgv.Rows.Clear()
 
+        ' ── Ligne Time Range en premier ──────────────────────────────────
+        Dim tDataMin As Double = If(_csvData.TimeData.Length > 0, _csvData.TimeData(0), 0.0)
+        Dim tDataMax As Double = If(_csvData.TimeData.Length > 0,
+            _csvData.TimeData(_csvData.TimeData.Length - 1), 1.0)
+        Dim tStart As Double = If(Not Double.IsNaN(_sessionTMin), _sessionTMin, tDataMin)
+        Dim tEnd As Double = If(Not Double.IsNaN(_sessionTMax), _sessionTMax, tDataMax)
+
+        Dim riT As Integer = _axesDgv.Rows.Add()
+        _axesDgv.Rows(riT).Cells("ACol_Group").Value = KEY_TIME
+        _axesDgv.Rows(riT).Cells("ACol_Min").Value = tStart.ToString("G6", ci)
+        _axesDgv.Rows(riT).Cells("ACol_Max").Value = tEnd.ToString("G6", ci)
+        _axesDgv.Rows(riT).Cells("ACol_Group").Style.ForeColor =
+            Drawing.Color.FromArgb(220, 200, 80)
+        _axesDgv.Rows(riT).Cells("ACol_Group").Style.Font =
+            New Font("Segoe UI", 8, FontStyle.Bold)
+        ' Afficher "Time Range" dans la cellule groupe (KEY_TIME est la cle interne)
+        _axesDgv.Rows(riT).Cells("ACol_Group").Value = "Time Range (s)"
+        ' Stocker la cle interne dans le Tag de la ligne
+        _axesDgv.Rows(riT).Tag = KEY_TIME
+
+        ' ── Lignes Y par groupe ────────────────────────────────────────────
         Dim seen As New HashSet(Of String)()
         For sigIdx As Integer = 0 To _csvData.Signals.Count - 1
             Dim key As String = GroupKeyForSignal(_csvData.Signals(sigIdx))
@@ -220,7 +235,6 @@ Partial Class HistoricalWindow
                 GetYBounds(idxList, _csvData.Signals))
 
             Dim grpColor As Drawing.Color = GetTabColor(key)
-
             Dim ri As Integer = _axesDgv.Rows.Add()
             _axesDgv.Rows(ri).Cells("ACol_Group").Value = key
             _axesDgv.Rows(ri).Cells("ACol_Min").Value = bounds.yMin.ToString("G6", ci)
@@ -228,12 +242,14 @@ Partial Class HistoricalWindow
             _axesDgv.Rows(ri).Cells("ACol_Group").Style.ForeColor = grpColor
             _axesDgv.Rows(ri).Cells("ACol_Group").Style.Font =
                 New Font("Segoe UI", 8, FontStyle.Bold)
+            _axesDgv.Rows(ri).Tag = key
             If ri Mod 2 = 1 Then
-                _axesDgv.Rows(ri).DefaultCellStyle.BackColor = Drawing.Color.FromArgb(26, 38, 65)
+                _axesDgv.Rows(ri).DefaultCellStyle.BackColor =
+                    Drawing.Color.FromArgb(26, 38, 65)
             End If
         Next
 
-        ' Ajouter aussi l onglet All Powers si plusieurs groupes de puissance presents
+        ' All Powers (auto)
         Dim hasPower As Boolean = seen.Contains("Active Power (W)") OrElse
                                   seen.Contains("Reactive Power (VAR)") OrElse
                                   seen.Contains("Apparent Power (VA)")
@@ -242,10 +258,10 @@ Partial Class HistoricalWindow
             _axesDgv.Rows(ri).Cells("ACol_Group").Value = "All Powers"
             _axesDgv.Rows(ri).Cells("ACol_Min").Value = ""
             _axesDgv.Rows(ri).Cells("ACol_Max").Value = ""
-            _axesDgv.Rows(ri).Cells("ACol_Group").Style.ForeColor =
-                GetTabColor("All Powers")
+            _axesDgv.Rows(ri).Cells("ACol_Group").Style.ForeColor = GetTabColor("All Powers")
             _axesDgv.Rows(ri).Cells("ACol_Group").Style.Font =
                 New Font("Segoe UI", 8, FontStyle.Italic)
+            _axesDgv.Rows(ri).Tag = "All Powers"
         End If
     End Sub
 
@@ -256,30 +272,85 @@ Partial Class HistoricalWindow
     Private Sub ApplyAxesChanges()
         If _axesDgv Is Nothing OrElse _csvData Is Nothing Then Return
         Dim ci As CultureInfo = CultureInfo.InvariantCulture
+
+        ' ── Sauvegarder l etat courant ────────────────────────────────────
+        Dim savedTabName As String = If(TabControl_Charts.SelectedTab IsNot Nothing,
+                                          TabControl_Charts.SelectedTab.Text, "")
+        Dim savedIsCursor As Boolean = (Button_Cursor.BackColor =
+                                        Drawing.Color.FromArgb(0, 90, 140))
+
+        ' Snapshot des checkboxes : globalIdx -> checked
+        Dim chkSnapshot As New Dictionary(Of Integer, Boolean)()
+        For Each kvp As KeyValuePair(Of Integer, CheckBox) In _histChkBoxes
+            chkSnapshot(kvp.Key) = kvp.Value.Checked
+        Next
+
+        ' ── Lire les nouvelles valeurs du DGV ────────────────────────────
         _sessionYBounds.Clear()
+        _sessionTMin = Double.NaN
+        _sessionTMax = Double.NaN
 
         For Each row As DataGridViewRow In _axesDgv.Rows
-            Dim key As String = TryCast(row.Cells("ACol_Group").Value, String)
-            If String.IsNullOrEmpty(key) OrElse key = "All Powers" Then Continue For
+            Dim tag As String = TryCast(row.Tag, String)
+            If String.IsNullOrEmpty(tag) Then Continue For
 
-            Dim minVal, maxVal As Double
-            If Double.TryParse(TryCast(row.Cells("ACol_Min").Value, String),
-                               NumberStyles.Any, ci, minVal) AndAlso
-               Double.TryParse(TryCast(row.Cells("ACol_Max").Value, String),
-                               NumberStyles.Any, ci, maxVal) Then
-                If maxVal > minVal Then _sessionYBounds(key) = (minVal, maxVal)
+            Dim sMin As String = TryCast(row.Cells("ACol_Min").Value, String)
+            Dim sMax As String = TryCast(row.Cells("ACol_Max").Value, String)
+
+            If tag = KEY_TIME Then
+                ' Plage temporelle
+                Dim tS, tE As Double
+                If Double.TryParse(sMin, NumberStyles.Any, ci, tS) Then _sessionTMin = tS
+                If Double.TryParse(sMax, NumberStyles.Any, ci, tE) Then _sessionTMax = tE
+            ElseIf tag <> "All Powers" Then
+                ' Bornes Y
+                Dim yMin, yMax As Double
+                If Double.TryParse(sMin, NumberStyles.Any, ci, yMin) AndAlso
+                   Double.TryParse(sMax, NumberStyles.Any, ci, yMax) AndAlso
+                   yMax > yMin Then
+                    _sessionYBounds(tag) = (yMin, yMax)
+                End If
             End If
         Next
 
+        ' ── Reconstruire les graphiques ───────────────────────────────────
         BuildChart(_csvData)
         Label_CursorTime.Text = "t = --"
-        ' Fermer le drawer apres Apply
+
+        ' ── Restaurer l onglet selectionne ────────────────────────────────
+        For Each tab As TabPage In TabControl_Charts.TabPages
+            If tab.Text = savedTabName Then
+                TabControl_Charts.SelectedTab = tab
+                Exit For
+            End If
+        Next
+
+        ' ── Restaurer le mode zoom/curseur ────────────────────────────────
+        If savedIsCursor Then
+            SetChartModeCursor()
+        Else
+            SetChartModeZoom()
+        End If
+
+        ' ── Restaurer les courbes masquees ────────────────────────────────
+        For Each kvp As KeyValuePair(Of Integer, Boolean) In chkSnapshot
+            If Not kvp.Value Then
+                SetHistSignalVisible(kvp.Key, False)
+                ' Synchroniser la checkbox dans le panel
+                If _histChkBoxes.ContainsKey(kvp.Key) Then
+                    _histChkBoxes(kvp.Key).Checked = False
+                End If
+            End If
+        Next
+
+        ' ── Fermer le drawer ──────────────────────────────────────────────
         CloseAxesDrawer()
-        SetChartModeZoom()
     End Sub
 
     Private Sub ResetAxesToPrefs()
         _sessionYBounds.Clear()
+        _sessionTMin = Double.NaN
+        _sessionTMax = Double.NaN
         PopulateAxesDgv()
     End Sub
 
@@ -330,7 +401,8 @@ Partial Class HistoricalWindow
     End Sub
 
     Private Sub AnimateDrawerStep(opening As Boolean)
-        Dim targetLeft As Integer = If(opening, Me.ClientSize.Width - DrawerW, Me.ClientSize.Width)
+        Dim targetLeft As Integer = If(opening,
+            Me.ClientSize.Width - DrawerW, Me.ClientSize.Width)
         Dim remaining As Integer = Math.Abs(Panel_AxesDrawer.Left - targetLeft)
         Dim slideStep As Integer = Math.Max(8, remaining \ 3)
 
@@ -343,7 +415,8 @@ Partial Class HistoricalWindow
             End If
         Else
             If Panel_AxesDrawer.Left < Me.ClientSize.Width Then
-                Panel_AxesDrawer.Left = Math.Min(Me.ClientSize.Width, Panel_AxesDrawer.Left + slideStep)
+                Panel_AxesDrawer.Left = Math.Min(Me.ClientSize.Width,
+                    Panel_AxesDrawer.Left + slideStep)
             Else
                 Panel_AxesDrawer.Visible = False
                 _drawerTimer.Stop()
@@ -362,3 +435,12 @@ Partial Class HistoricalWindow
 #End Region
 
 End Class
+' NOTE: Also add to HistoricalWindow.Chart.vb:
+' 1. In BuildChart, replace the first 4 lines with:
+'      Dim workData As CsvData = FilterDataByTime(data, _sessionTMin, _sessionTMax)
+'      TabControl_Charts.TabPages.Clear()
+'      ...
+'      Dim tMin = workData.TimeData(0), tMax = workData.TimeData(last)
+'    Then use 'workData' instead of 'data' in groups loop and AddChartTab calls
+'
+' 2. Add the FilterDataByTime function below (in the Partial Class HistoricalWindow region)
