@@ -84,16 +84,14 @@
     '=========================================================================
     ' READ EPACK 
     '
-    ' Argument : true to display Read Values on a TextBox
+    ' Argument : true to display Readed Values on a TextBox
     '=========================================================================
     Public Sub Read_epackTCP(TextBox As Boolean)
         Dim byteresult(61) As Byte
-        Dim val As Integer = 256
-        Dim mybytelength As Integer = 60
+        Dim startAddr As Integer = 256
+        Dim mybytelength As Integer = 40   '  Oversized car registres vides + entêtes'
 
-        If modbustcp.Read_NChar(1, val, byteresult, mybytelength) Then
-
-            ' Lecture des registres en une boucle
+        If modbustcp.Read_NChar(1, startAddr, byteresult, mybytelength) Then
             Dim reg(12) As Integer
             For i As Integer = 0 To 12
                 reg(i) = makeuint(byteresult(i * 2), byteresult(i * 2 + 1))
@@ -116,64 +114,75 @@
             modbustcp.ReadInteger(1, 1440, TCP_Var.Ramping)
 
             If TextBox Then
-                Dim result As String = ""
-                For i As Integer = 0 To 12
-                    result &= (val + i).ToString & "=" & reg(i).ToString & vbCrLf
-                Next
-                MsgBox(result)
-            End If
+                Dim names() As String = {
+                "V Line", "I rms", "I sq burst", "I sq",
+                "V rms", "V sq", "P burst", "P", "S", "PF", "Z", "Frequency", "V sq burst"}
 
+                Dim result As String = "─── ePack Values  (Datasheet p.180) ───" & vbCrLf & vbCrLf
+                For i As Integer = 0 To 12
+                    Dim addr As String = ("[" & (startAddr + i).ToString() & "]").PadRight(7)
+                    Dim name As String = names(i)
+                    Dim v As String = reg(i).ToString()
+                    result &= addr & "  " & name & " = " & v & vbCrLf
+                Next
+                Dim addrRamp As String = "[1440]".PadRight(7)
+                result &= addrRamp & "  Ramping = " & TCP_Var.Ramping.ToString()
+                MsgBox(result, MsgBoxStyle.Information, "ePack Values")
+            End If
         Else
             modbustcpisconnected = False
         End If
     End Sub
 
+    '=========================================================================
+    ' READ EPACK CONFIG 
+    '
+    ' Argument : true to display Readed Configs status on a TextBox
+    '=========================================================================
     Public Sub Read_Config_epackTCP(TextBox As Boolean)
-        ' Lecture en bloc de 3400 a 3412 (13 registres = 26 bytes)
-        Dim byteresult(50) As Byte              ' Test d'index x2 (25*2) 
+        Dim byteresult(61) As Byte
         Dim startAddr As Integer = 3400
         Dim regCount As Integer = 13
-        Dim mybytelength As Integer = regCount * 2 + 1  ' Test d'index  +1 
+        Dim mybytelength As Integer = 40   '  Oversized car registres vides + entêtes'
 
         If modbustcp.Read_NChar(1, startAddr, byteresult, mybytelength) Then
             Dim reg(regCount - 1) As Integer
             For i As Integer = 0 To regCount - 1
-                reg(i) = makeuint(byteresult(i * 2), byteresult(i * 2 + 1))                     ''TODO  SIZE BUFFER DE LECTURE DES REGISTRES !!!!!!!!!!!!!!!
+                reg(i) = makeuint(byteresult(i * 2), byteresult(i * 2 + 1))
             Next
 
-            ' Mapping adresse -> variable (offset depuis 3400)
-            ' 3400=Finish(ignore), 3401=vide, 3402=Firing, 3403=I_Limit,
-            ' 3404=I2_Transfer, 3405=Control, 3406=Heater, 3407=AI_Fct,
-            ' 3408=AI_Type, 3409=DI2_Fct, 3410=Xfmr, 3411=I_Nominal, 3412=V_Nominal
-            TCP_Var.Firing = reg(2)   '3402
-            TCP_Var.I_Limit = reg(3)   '3403
-            TCP_Var.I2_Transfer = reg(4)   '3404
-            TCP_Var.Control = reg(5)   '3405
-            TCP_Var.Heater = reg(6)   '3406
-            TCP_Var.AI_Fct = reg(7)   '3407
-            TCP_Var.AI_Type = reg(8)   '3408
-            TCP_Var.DI2_Fct = reg(9)   '3409
-            TCP_Var.Xfmr = reg(10)  '3410
-            TCP_Var.I_Nominal = reg(11)  '3411
-            TCP_Var.V_Nominal = reg(12)  '3412
+            TCP_Var.Firing = reg(2)
+            TCP_Var.I_Limit = reg(3)
+            TCP_Var.I2_Transfer = reg(4)
+            TCP_Var.Control = reg(5)
+            TCP_Var.Heater = reg(6)
+            TCP_Var.AI_Fct = reg(7)
+            TCP_Var.AI_Type = reg(8)
+            TCP_Var.DI2_Fct = reg(9)
+            TCP_Var.Xfmr = reg(10)
+            TCP_Var.I_Nominal = reg(11)
+            TCP_Var.V_Nominal = reg(12)
 
-            ' DI1_Fct separee a 3418 (trop loin pour le bloc)
             modbustcp.ReadInteger(1, 3418, TCP_Var.DI1_Fct)
 
             If TextBox Then
-                Dim result As String = ""
                 Dim names() As String = {
-                "Finish", "?", "Firing", "I_Limit", "I2_Transfer",
-                "Control", "Heater", "AI_Fct", "AI_Type", "DI2_Fct",
-                "Xfmr", "I_Nominal", "V_Nominal"}
-                For i As Integer = 0 To regCount - 1
-                    result &= names(i) & " [" & (startAddr + i).ToString() & "] = " &
-                          reg(i).ToString() & vbCrLf
-                Next
-                result &= "DI1_Fct [3418] = " & TCP_Var.DI1_Fct.ToString()
-                MsgBox(result)
-            End If
+                "QuickStart Finish", "[blank]", "Firing", "I_Limit", "I2_Transfer",
+                "Control", "Heater", "AI_Fct", "AI_Type", "DI2_Fct", "Xfmr", "I_Nominal", "V_Nominal"}
 
+                Dim result As String = "─── ePack Config  (Datasheet p.60) ───" & vbCrLf & vbCrLf
+                For i As Integer = 0 To regCount - 1
+                    Dim addr As String = ("[" & (startAddr + i).ToString() & "]").PadRight(7)
+                    Dim name As String = names(i)
+                    Dim val As String = reg(i).ToString()
+                    result &= addr & "  " & name & " = " & val & vbCrLf
+                Next
+                Dim addrDi1 As String = "[3418]".PadRight(7)
+                Dim nameDi1 As String = "DI1_Fct"
+                Dim valDi1 As String = TCP_Var.DI1_Fct.ToString()
+                result &= addrDi1 & "  " & nameDi1 & " = " & valDi1
+                MsgBox(result, MsgBoxStyle.Information, "ePack Configuration")
+            End If
         Else
             modbustcpisconnected = False
         End If
