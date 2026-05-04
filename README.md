@@ -13,6 +13,13 @@
 
 ##
 
+## 🔎 Mode de Demo - Si aucune connection possible 
+
+Pour entrer dans le mode demo du logiciel si la connection Modbus est impossible,
+il suffit d'entrer "99" à la place de l'adresse COM 53U dans la fenêtre de connection puis faire Start (DEMO).
+Cela permet aussi d'avoir accès à l'observation des fichiers historique déjà enregistrés.
+
+##
 
 ## ⚙️ Fichiers de configuration
 
@@ -22,4 +29,5 @@ Des fichiers de configuration exemples sont disponibles ici :
 Pour les inclures copier les .json dans le répertoire de l'application "config" :
 C:\Users\<UserName>\AppData\Local\Electric_Meter_53U\config  (par défaut)
 
-##
+
+
