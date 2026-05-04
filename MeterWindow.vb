@@ -294,17 +294,20 @@ Public Class MeterWindow
         ShowView(ViewMode.Harmonic)
     End Sub
     Private Sub Button_ViewHistorical_Click(s As Object, e As EventArgs) Handles Button_ViewHistorical.Click
-        Dim wasRunning As Boolean = Timer_Sample.Enabled
-        If wasRunning Then
-            Timer_Sample.Stop()
-            'UpdateChartPauseButton()
-            UpdateSamplingButton()
-        End If
+        'Dim wasRunning As Boolean = Timer_Sample.Enabled
+        'If wasRunning Then
+        Timer_Sample.Stop()
+        Main_Chart.PauseStopwatch()
+        _csvPaused = True
+        'UpdateChartPauseButton()
+        UpdateSamplingButton()
+        'End If
 
         Dim hw As New HistoricalWindow()
-        AddHandler hw.FormClosed, Sub(fs As Object, fe As FormClosedEventArgs)
-                                      If wasRunning Then Timer_Sample.Start()
-                                  End Sub
+        'AddHandler hw.FormClosed, Sub(fs As Object, fe As FormClosedEventArgs)
+        '                              If wasRunning Then Timer_Sample.Start()
+        '                              UpdateSamplingButton()
+        '                          End Sub
         hw.Show()
     End Sub
 
@@ -316,11 +319,14 @@ Public Class MeterWindow
         UpdateSampleLabel()
 
         ' Rebuild dynamic panel
-        BuildElecValuesPanel()
         Panel_ElecValScroll.AutoScrollPosition = New System.Drawing.Point(0, 0)
+        Panel_ElecValScroll.VerticalScroll.Value = 0
+        Panel_ElecValScroll.VerticalScroll.Minimum = 0
         Panel_ElecValScroll.PerformLayout()
         Panel_ElecValScroll.Invalidate(True)
         Panel_ElecValScroll.Refresh()
+
+        BuildElecValuesPanel()
 
         ' Rebuild chart
         Main_Chart.InitializeChart(_prefs.GetPanelRealTimeSignals(), True)
@@ -332,7 +338,7 @@ Public Class MeterWindow
         UpdateAxisGroupHighlight()
         SyncY1Y2CombosFromPrefs()
         If Timer_Sample.Enabled AndAlso Not _isChartFrozen Then Main_Chart.StartStopwatch()
-        'UpdateChartPauseButton()
+        UpdateSamplingButton()
 
         ' HD rebuild
         InitHdPanel()

@@ -562,30 +562,54 @@ Partial Class MeterWindow
     End Sub
 
     ' FOOTER — ACQUISITION BUTTON
-    Private Sub Button_Sampling_Click(sender As Object, e As EventArgs) Handles Button_Sampling.Click
+    Private Sub Button_SamplingPause_Click(sender As Object, e As EventArgs) Handles Button_Sampling.Click
         If Timer_Sample.Enabled Then
+            ' PAUSE : tout arreter
             Timer_Sample.Stop()
-            If Not _isChartFrozen Then Main_Chart.PauseStopwatch()
+            Main_Chart.PauseStopwatch()
+            _csvPaused = True
+            _isChartFrozen = True
         Else
-            If IsConnected() Then
-                Timer_Sample.Start()
-                If Not _isChartFrozen Then Main_Chart.StartStopwatch()
-            End If
+            ' RESUME : tout relancer
+            Timer_Sample.Start()
+            Main_Chart.StartStopwatch()
+            _csvPaused = False
+            _isChartFrozen = False
         End If
         UpdateSamplingButton()
+        UpdateRecordButton()
     End Sub
+
+    Private _pauseLabel As Label = Nothing
 
     Friend Sub UpdateSamplingButton()
         If Timer_Sample.Enabled Then
             Button_Sampling.BackColor = Drawing.Color.FromArgb(0, 105, 145)
             Button_Sampling.ForeColor = Drawing.Color.White
             Button_Sampling.Text = "⏹ STOP"
+            If _pauseLabel IsNot Nothing Then _pauseLabel.Visible = False
         Else
             Button_Sampling.BackColor = Drawing.Color.FromArgb(28, 105, 65)
             Button_Sampling.ForeColor = Drawing.Color.FromArgb(190, 245, 215)
             Button_Sampling.Text = "▶ START"
+            If _pauseLabel Is Nothing Then
+                _pauseLabel = New Label()
+                _pauseLabel.Text = "⏸"
+                _pauseLabel.Font = New Drawing.Font("Segoe UI", 72, Drawing.FontStyle.Bold)
+                _pauseLabel.ForeColor = Drawing.Color.FromArgb(160, 255, 255, 255)
+                _pauseLabel.BackColor = Drawing.Color.Transparent
+                _pauseLabel.AutoSize = True
+                Main_Chart.Controls.Add(_pauseLabel)
+            End If
+            _pauseLabel.Visible = True
+            _pauseLabel.Location = New Point(
+            (Main_Chart.Width - _pauseLabel.Width) \ 2,
+            (Main_Chart.Height - _pauseLabel.Height) \ 2)
+            _pauseLabel.BringToFront()
         End If
     End Sub
+
+    ''OLD
 
     '' FOOTER — CHART FREEZE / RESET / PREFERENCES
     'Private Sub Button_ChartPause_Click(sender As Object, e As EventArgs) Handles Button_ChartPause.Click
@@ -645,6 +669,7 @@ Partial Class MeterWindow
         Main_Chart.SetAxisGroups(_prefs.Y1GroupIndex, _prefs.Y2GroupIndex)
         ApplyAllChartSignalStates()
         UpdateAxisGroupHighlight()
+        UpdateSamplingButton()
     End Sub
 
     Private Sub Button_Settings_Click(sender As Object, e As EventArgs) Handles Button_Settings.Click

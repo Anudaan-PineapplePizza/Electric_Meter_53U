@@ -203,8 +203,20 @@ Partial Class MeterWindow
     End Sub
 
     Private Sub Button_RecordPause_Click(sender As Object, e As EventArgs) Handles Button_RecordPause.Click
-        If Not _isRecording Then Return
-        _csvPaused = Not _csvPaused
+        If Timer_Sample.Enabled Then
+            ' PAUSE : tout arreter
+            Timer_Sample.Stop()
+            Main_Chart.PauseStopwatch()
+            _csvPaused = True
+            _isChartFrozen = True
+        Else
+            ' RESUME : tout relancer
+            Timer_Sample.Start()
+            Main_Chart.StartStopwatch()
+            _csvPaused = False
+            _isChartFrozen = False
+        End If
+        UpdateSamplingButton()
         UpdateRecordButton()
     End Sub
 

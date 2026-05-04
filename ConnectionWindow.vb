@@ -224,8 +224,8 @@ Public Class ConnectionWindow
 
     Private Sub TextBox_DeviceAddress_TextChanged(sender As Object, e As EventArgs) _
             Handles TextBox_DeviceAddress.TextChanged
-        ' Mode demo : device = 67 deverrouille Start independamment de la connexion
-        If TextBox_DeviceAddress.Text.Trim() = "67" Then
+
+        If (TextBox_DeviceAddress.Text.Trim() = "67" Or TextBox_DeviceAddress.Text.Trim() = "99") Then
             Button_Start.Enabled = True
             Button_Start.BackColor = Drawing.Color.FromArgb(130, 85, 0)
             Button_Start.Text = "Start (DEMO)"
@@ -235,7 +235,7 @@ Public Class ConnectionWindow
     End Sub
 
     Private Sub Button_Start_Click(sender As Object, e As EventArgs) Handles Button_Start.Click
-        If TextBox_DeviceAddress.Text.Trim() = "67" Then
+        If (TextBox_DeviceAddress.Text.Trim() = "67" Or TextBox_DeviceAddress.Text.Trim() = "99") Then
             MeterWindow.IsDemoMode = True
             ApplySelectedConfig()
             Me.Hide()

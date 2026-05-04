@@ -17,6 +17,11 @@ Public Class HistoricalWindow
 
     Private Sub HistoricalWindow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SetChartModeZoom()
+        MeterWindow.UpdateSamplingButton()
+    End Sub
+
+    Private Sub HistoricalWindow_Close(sender As Object, e As EventArgs) Handles MyBase.Closed
+        MeterWindow.UpdateSamplingButton()
     End Sub
 
     Private Sub Button_Open_Click(sender As Object, e As EventArgs) Handles Button_Open.Click
