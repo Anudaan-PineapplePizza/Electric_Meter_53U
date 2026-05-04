@@ -344,6 +344,9 @@ Public Class MeterWindow
         InitHdPanel()
         _isHdPanelBuilt = True
         If IsConnected() OrElse IsDemoMode Then ReadAndRefreshHD()
+
+        ChartReset()
+
     End Sub
 
 End Class

@@ -443,6 +443,73 @@ Public Class UserPreferences
                 Next
             End If
         Next
+        ' HdGroups
+        m = System.Text.RegularExpressions.Regex.Match(
+            json, """hd_groups""\s*:\s*\[(.*?)\]",
+            System.Text.RegularExpressions.RegexOptions.Singleline)
+        If m.Success Then
+            HdGroups.Clear()
+            For Each t As System.Text.RegularExpressions.Match In
+                    System.Text.RegularExpressions.Regex.Matches(m.Groups(1).Value, "(\d+)")
+                Dim v As Integer
+                If Integer.TryParse(t.Groups(1).Value, v) AndAlso v >= 0 AndAlso v <= 29 Then
+                    HdGroups.Add(v)
+                End If
+            Next
+        End If
+
+        ' HdOrders
+        m = System.Text.RegularExpressions.Regex.Match(
+            json, """hd_orders""\s*:\s*\[(.*?)\]",
+            System.Text.RegularExpressions.RegexOptions.Singleline)
+        If m.Success Then
+            HdOrders.Clear()
+            For Each t As System.Text.RegularExpressions.Match In
+                    System.Text.RegularExpressions.Regex.Matches(m.Groups(1).Value, "(\d+)")
+                Dim v As Integer
+                If Integer.TryParse(t.Groups(1).Value, v) AndAlso v >= 2 AndAlso v <= 31 Then
+                    HdOrders.Add(v)
+                End If
+            Next
+        End If
+
+        ' HdExportEnabled
+        m = System.Text.RegularExpressions.Regex.Match(json, """hd_csv""\s*:\s*(true|false)")
+        If m.Success Then HdExportEnabled = (m.Groups(1).Value.ToLower() = "true")
+
+        ' AxisMin (format objet imbrique)
+        m = System.Text.RegularExpressions.Regex.Match(
+            json, """axis_min""\s*:\s*\{(.*?)\}",
+            System.Text.RegularExpressions.RegexOptions.Singleline)
+        If m.Success Then
+            AxisMinimums.Clear()
+            For Each axm As System.Text.RegularExpressions.Match In
+                    System.Text.RegularExpressions.Regex.Matches(
+                        m.Groups(1).Value, """(\w+)""\s*:\s*([\d.\-]+)")
+                Dim sid As SignalID : Dim v As Double
+                If [Enum].TryParse(Of SignalID)(axm.Groups(1).Value, sid) AndAlso
+                   Double.TryParse(axm.Groups(2).Value, NumberStyles.Any, ci, v) Then
+                    AxisMinimums(sid) = v
+                End If
+            Next
+        End If
+
+        ' AxisMax (format objet imbrique)
+        m = System.Text.RegularExpressions.Regex.Match(
+            json, """axis_max""\s*:\s*\{(.*?)\}",
+            System.Text.RegularExpressions.RegexOptions.Singleline)
+        If m.Success Then
+            AxisMaximums.Clear()
+            For Each axm As System.Text.RegularExpressions.Match In
+                    System.Text.RegularExpressions.Regex.Matches(
+                        m.Groups(1).Value, """(\w+)""\s*:\s*([\d.\-]+)")
+                Dim sid As SignalID : Dim v As Double
+                If [Enum].TryParse(Of SignalID)(axm.Groups(1).Value, sid) AndAlso
+                   Double.TryParse(axm.Groups(2).Value, NumberStyles.Any, ci, v) Then
+                    AxisMaximums(sid) = v
+                End If
+            Next
+        End If
     End Sub
 
 End Class

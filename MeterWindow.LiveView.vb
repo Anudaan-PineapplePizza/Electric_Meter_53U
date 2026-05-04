@@ -50,6 +50,11 @@ Partial Class MeterWindow
             oldDyn.Dispose()
         End If
 
+        ' Forcer tous les signaux realtime actifs pour eviter les pertes de donnees
+        For Each r As RegisterDef In RegisterMap.GetRealTimeSignals()
+            _prefs.SetEnabled(r.ID, True)
+        Next
+
         ' Grouper les signaux visibles par SignalGroup dans l ordre voulu
         Dim groupOrder As SignalGroup() = {
             SignalGroup.Voltage, SignalGroup.Current, SignalGroup.Power,
@@ -221,7 +226,8 @@ Partial Class MeterWindow
                 Dim capturedId As SignalID = r.ID
                 AddHandler chk.CheckedChanged, Sub(s2 As Object, ev2 As EventArgs)
                                                    If Not _suppressComboEvents Then
-                                                       _prefs.SetEnabled(capturedId, chk.Checked)
+                                                       ' Ne pas toucher SetEnabled : le signal est toujours tracé
+                                                       ' Juste controler l affichage visuel sur le chart
                                                        If _isChartReady Then Main_Chart.SetPlotEnabled(capturedId, chk.Checked)
                                                        _prefs.Save()
                                                    End If
@@ -236,6 +242,12 @@ Partial Class MeterWindow
             ' Avancer yPos apres le groupe (retour colonne gauche garanti)
             Dim grpRows As Integer = CInt(Math.Ceiling(grpSignals.Count / CDbl(Cols)))
             yPos += grpRows * (CellH + Gap)
+        Next
+
+        ' Forcer le tracage de tous les signaux puis appliquer l affichage selon checkbox
+        For Each kvp As KeyValuePair(Of SignalID, CheckBox) In _dynChartChecks
+            _prefs.SetEnabled(kvp.Key, True)
+            If _isChartReady Then Main_Chart.SetPlotEnabled(kvp.Key, kvp.Value.Checked)
         Next
 
         Panel_ElecValScroll.Controls.Add(container)
@@ -665,11 +677,16 @@ Partial Class MeterWindow
         Main_Chart.ResetChart()
         _isChartReady = True : _isChartFrozen = False
         If Timer_Sample.Enabled Then Main_Chart.StartStopwatch()
-        'UpdateChartPauseButton()
         Main_Chart.SetAxisGroups(_prefs.Y1GroupIndex, _prefs.Y2GroupIndex)
         ApplyAllChartSignalStates()
         UpdateAxisGroupHighlight()
         UpdateSamplingButton()
+
+        ' Appliquer l etat des checkboxes EN DERNIER pour ne pas etre ecrase
+        For Each kvp As KeyValuePair(Of SignalID, CheckBox) In _dynChartChecks
+            _prefs.SetEnabled(kvp.Key, True)
+            If _isChartReady Then Main_Chart.SetPlotEnabled(kvp.Key, kvp.Value.Checked)
+        Next
     End Sub
 
     Private Sub Button_Settings_Click(sender As Object, e As EventArgs) Handles Button_Settings.Click
